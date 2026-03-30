@@ -11,7 +11,17 @@
   "dependencies": {
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.35"
+    "next": "14.2.35",
+    "@supabase/supabase-js": "^2",
+    "@supabase/ssr": "^0.5",
+    "@livekit/components-react": "^2",
+    "@livekit/components-styles": "^1",
+    "livekit-client": "^2",
+    "livekit-server-sdk": "^2",
+    "lucide-react": "^0.460",
+    "date-fns": "^4",
+    "react-dropzone": "^14",
+    "zustand": "^5"
   },
   "devDependencies": {
     "typescript": "^5",
