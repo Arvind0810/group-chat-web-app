@@ -28,3 +28,33 @@
   background-color: #52525b;
   border-radius: 3px;
 }
+
+/* ── LiveKit viewport fix ───────────────────────────────────────────────── */
+/* Prevent the LiveKit VideoConference / GridLayout from overflowing the
+   bounded container we give it. These selectors target LiveKit's own DOM. */
+[data-lk-theme],
+.lk-room-container,
+.lk-video-conference,
+.lk-grid-layout,
+.lk-focus-layout,
+.lk-participant-grid {
+  max-height: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Mobile: ensure video tiles don't have fixed large min-heights */
+@media (max-width: 768px) {
+  .lk-participant-tile,
+  .lk-participant-tile video {
+    min-height: 0 !important;
+  }
+  .lk-control-bar {
+    padding: 8px !important;
+    gap: 8px !important;
+  }
+  .lk-button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}

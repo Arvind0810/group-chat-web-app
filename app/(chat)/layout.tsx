@@ -84,12 +84,13 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header */}
-        <div className="md:hidden flex items-center p-3 border-b border-zinc-700 bg-zinc-800">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+        {/* Mobile header — only shown outside call pages */}
+        <div className="md:hidden flex items-center p-3 border-b border-zinc-700 bg-zinc-800 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700"
+            className="p-2.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 touch-manipulation"
+            aria-label="Open sidebar"
           >
             <Menu size={20} />
           </button>

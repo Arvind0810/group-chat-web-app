@@ -1,17 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   LiveKitRoom,
   VideoConference,
   RoomAudioRenderer,
-  ControlBar,
-  GridLayout,
-  ParticipantTile,
-  useTracks,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { Track } from 'livekit-client';
 import { Loader2 } from 'lucide-react';
 
 interface CallRoomProps {
@@ -31,18 +25,35 @@ export function CallRoom({ token, serverUrl, callType, onDisconnected }: CallRoo
   }
 
   return (
-    <LiveKitRoom
-      token={token}
-      serverUrl={serverUrl}
-      connect={true}
-      video={callType === 'video'}
-      audio={true}
-      onDisconnected={onDisconnected}
-      data-lk-theme="default"
-      style={{ height: '100%' }}
-    >
-      <VideoConference />
-      <RoomAudioRenderer />
-    </LiveKitRoom>
+    /*
+     * Outer div is the hard boundary: position-relative + overflow-hidden
+     * ensures LiveKit never escapes beyond the space we allocate.
+     * `h-full w-full` inherits the constrained dimensions from the parent.
+     */
+    <div className="relative w-full h-full overflow-hidden">
+      <LiveKitRoom
+        token={token}
+        serverUrl={serverUrl}
+        connect={true}
+        video={callType === 'video'}
+        audio={true}
+        onDisconnected={onDisconnected}
+        data-lk-theme="default"
+        style={{ height: '100%', width: '100%' }}
+      >
+        {/*
+         * VideoConference renders a grid + control bar internally.
+         * We wrap it in a flex-col container that is also overflow-hidden
+         * so the grid never grows past the parent.
+         */}
+        <div
+          style={{ height: '100%', width: '100%' }}
+          className="flex flex-col overflow-hidden"
+        >
+          <VideoConference />
+        </div>
+        <RoomAudioRenderer />
+      </LiveKitRoom>
+    </div>
   );
 }
