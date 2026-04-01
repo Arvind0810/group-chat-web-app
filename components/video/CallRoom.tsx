@@ -2,10 +2,14 @@
 
 import {
   LiveKitRoom,
-  VideoConference,
+  GridLayout,
+  ParticipantTile,
   RoomAudioRenderer,
+  ControlBar,
+  useTracks,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
+import { Track } from 'livekit-client';
 import { Loader2 } from 'lucide-react';
 
 interface CallRoomProps {
@@ -13,6 +17,56 @@ interface CallRoomProps {
   serverUrl: string;
   callType: 'voice' | 'video';
   onDisconnected: () => void;
+}
+
+/**
+ * Custom layout built from LiveKit primitives instead of <VideoConference>.
+ *
+ * WHY: VideoConference wraps GridLayout in a pagination layer (updatePages)
+ * that throws "Element not part of the array" when a track placeholder is
+ * removed during a publish/unpublish transition. Using GridLayout directly
+ * bypasses that pagination logic and eliminates the error.
+ *
+ * Must be rendered as a child of <LiveKitRoom> so useTracks has context.
+ */
+function CallLayout({ callType }: { callType: 'voice' | 'video' }) {
+  const tracks = useTracks(
+    callType === 'video'
+      ? [
+          { source: Track.Source.Camera, withPlaceholder: true },
+          { source: Track.Source.ScreenShare, withPlaceholder: false },
+        ]
+      : [
+          // Voice: show participant tiles (with mic placeholder so avatars appear)
+          { source: Track.Source.Microphone, withPlaceholder: true },
+        ],
+    { onlySubscribed: false }
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Grid grows to fill all remaining height; min-height:0 is critical */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <GridLayout
+          tracks={tracks}
+          style={{ height: '100%', width: '100%' }}
+        >
+          <ParticipantTile />
+        </GridLayout>
+      </div>
+
+      {/* Control bar is fixed-height and never scrolls */}
+      <ControlBar style={{ flexShrink: 0 }} />
+    </div>
+  );
 }
 
 export function CallRoom({ token, serverUrl, callType, onDisconnected }: CallRoomProps) {
@@ -25,11 +79,6 @@ export function CallRoom({ token, serverUrl, callType, onDisconnected }: CallRoo
   }
 
   return (
-    /*
-     * Outer div is the hard boundary: position-relative + overflow-hidden
-     * ensures LiveKit never escapes beyond the space we allocate.
-     * `h-full w-full` inherits the constrained dimensions from the parent.
-     */
     <div className="relative w-full h-full overflow-hidden">
       <LiveKitRoom
         token={token}
@@ -41,17 +90,7 @@ export function CallRoom({ token, serverUrl, callType, onDisconnected }: CallRoo
         data-lk-theme="default"
         style={{ height: '100%', width: '100%' }}
       >
-        {/*
-         * VideoConference renders a grid + control bar internally.
-         * We wrap it in a flex-col container that is also overflow-hidden
-         * so the grid never grows past the parent.
-         */}
-        <div
-          style={{ height: '100%', width: '100%' }}
-          className="flex flex-col overflow-hidden"
-        >
-          <VideoConference />
-        </div>
+        <CallLayout callType={callType} />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>

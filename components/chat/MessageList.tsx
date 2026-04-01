@@ -86,7 +86,7 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto"
+      className="flex-1 min-h-0 overflow-y-auto"
       onScroll={handleScroll}
     >
       {hasMore && (

@@ -62,25 +62,29 @@ export default function GroupChatPage() {
   const handleNewMessage = useCallback(
     (message: Message) => {
       setMessages((prev) => {
-        // Check if message already exists (from optimistic update)
-        const exists = prev.find(
+        // 1. Already have the real ID → ignore (handles double-fire)
+        if (prev.some((m) => m.id === message.id)) return prev;
+
+        // 2. Find an optimistic (temp-*) placeholder from the same sender.
+        //    Match by sender + content + within a 15-second window so that
+        //    identical messages sent at different times don't merge wrongly.
+        const msgTime = new Date(message.created_at).getTime();
+        const tempIdx = prev.findIndex(
           (m) =>
-            m.id === message.id ||
-            (m.id.startsWith('temp-') &&
-              m.sender_id === message.sender_id &&
-              m.content === message.content)
+            m.id.startsWith('temp-') &&
+            m.sender_id === message.sender_id &&
+            m.content === message.content &&
+            Math.abs(new Date(m.created_at).getTime() - msgTime) < 15_000
         );
-        if (exists) {
-          // Replace optimistic message
-          return prev.map((m) =>
-            (m.id === message.id ||
-              (m.id.startsWith('temp-') &&
-                m.sender_id === message.sender_id &&
-                m.content === message.content))
-              ? message
-              : m
-          );
+
+        if (tempIdx !== -1) {
+          // Replace the placeholder with the confirmed message in-place
+          const next = [...prev];
+          next[tempIdx] = message;
+          return next;
         }
+
+        // 3. Genuinely new message from another client → append
         return [...prev, message];
       });
     },
